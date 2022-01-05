@@ -3,6 +3,8 @@
 OOP - Ex4
 Very simple GUI example for python client to communicates with the server and "play the game!"
 """
+import math
+import time as t
 from types import SimpleNamespace
 from client import Client
 import json
@@ -43,7 +45,7 @@ for n in graph.Nodes:
     x, y, _ = n.pos.split(',')
     n.pos = SimpleNamespace(x=float(x), y=float(y))
 
- # get data proportions
+# get data proportions
 min_x = min(list(graph.Nodes), key=lambda n: n.pos.x).pos.x
 min_y = min(list(graph.Nodes), key=lambda n: n.pos.y).pos.y
 max_x = max(list(graph.Nodes), key=lambda n: n.pos.x).pos.x
@@ -55,7 +57,7 @@ def scale(data, min_screen, max_screen, min_data, max_data):
     get the scaled data with proportions min_data, max_data
     relative to min and max screen dimentions
     """
-    return ((data - min_data) / (max_data-min_data)) * (max_screen - min_screen) + min_screen
+    return ((data - min_data) / (max_data - min_data)) * (max_screen - min_screen) + min_screen
 
 
 # decorate scale with the correct values
@@ -64,7 +66,7 @@ def my_scale(data, x=False, y=False):
     if x:
         return scale(data, 50, screen.get_width() - 50, min_x, max_x)
     if y:
-        return scale(data, 50, screen.get_height()-50, min_y, max_y)
+        return scale(data, 50, screen.get_height() - 50, min_y, max_y)
 
 
 radius = 15
@@ -81,6 +83,19 @@ client.start()
 The code below should be improved significantly:
 The GUI and the "algo" are mixed - refactoring using MVC design pattern is required.
 """
+# def arrow(screen, lcolor, tricolor, start, end, trirad, thickness=2):
+#     pygame.draw.line(screen, lcolor, start, end, thickness)
+#     rotation = (math.atan2(start[1] - end[1], end[0] - start[0])) + math.pi/2
+#     pygame.draw.polygon(screen, tricolor, ((end[0] + trirad * math.sin(rotation),
+#                                         end[1] + trirad * math.cos(rotation)),
+#                                        (end[0] + trirad * math.sin(rotation - 120*(math.pi/180)),
+#                                         end[1] + trirad * math.cos(rotation - 120*(math.pi/180)),
+#                                        (end[0] + trirad * math.sin(rotation + 120*(math.pi/180)),
+#                                         end[1] + trirad * math.cos(rotation + 120*(math.pi/180))))))
+
+
+last_move_time = t.time()
+# print(last_move_time)
 
 while client.is_running() == 'true':
     pokemons = json.loads(client.get_pokemons(),
@@ -138,6 +153,7 @@ while client.is_running() == 'true':
         pygame.draw.line(screen, Color(61, 72, 126),
                          (src_x, src_y), (dest_x, dest_y))
 
+
     # draw agents
     for agent in agents:
         pygame.draw.circle(screen, Color(122, 61, 23),
@@ -154,12 +170,20 @@ while client.is_running() == 'true':
 
     # choose next edge
     for agent in agents:
+        # print(agent)
         if agent.dest == -1:
             next_node = (agent.src - 1) % len(graph.Nodes)
             client.choose_next_edge(
-                '{"agent_id":'+str(agent.id)+', "next_node_id":'+str(next_node)+'}')
+                '{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
             ttl = client.time_to_end()
             print(ttl, client.get_info())
 
-    client.move()
+    time_from_last_move = t.time() - last_move_time
+    # print("time from last move: ", time_from_last_move)
+
+    if time_from_last_move >= 0.1:
+        client.move()
+        last_move_time = t.time()
+        # print(last_move_time)
+
 # game over:
