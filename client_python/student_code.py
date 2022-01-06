@@ -22,6 +22,8 @@ HOST = '127.0.0.1'
 pygame.init()
 
 screen = display.set_mode((WIDTH, HEIGHT), depth=32, flags=RESIZABLE)
+width = screen.get_width()
+height = screen.get_height()
 clock = pygame.time.Clock()
 pygame.font.init()
 
@@ -83,16 +85,6 @@ client.start()
 The code below should be improved significantly:
 The GUI and the "algo" are mixed - refactoring using MVC design pattern is required.
 """
-# def arrow(screen, lcolor, tricolor, start, end, trirad, thickness=2):
-#     pygame.draw.line(screen, lcolor, start, end, thickness)
-#     rotation = (math.atan2(start[1] - end[1], end[0] - start[0])) + math.pi/2
-#     pygame.draw.polygon(screen, tricolor, ((end[0] + trirad * math.sin(rotation),
-#                                         end[1] + trirad * math.cos(rotation)),
-#                                        (end[0] + trirad * math.sin(rotation - 120*(math.pi/180)),
-#                                         end[1] + trirad * math.cos(rotation - 120*(math.pi/180)),
-#                                        (end[0] + trirad * math.sin(rotation + 120*(math.pi/180)),
-#                                         end[1] + trirad * math.cos(rotation + 120*(math.pi/180))))))
-
 
 last_move_time = t.time()
 # print(last_move_time)
@@ -113,13 +105,42 @@ while client.is_running() == 'true':
         a.pos = SimpleNamespace(x=my_scale(
             float(x), x=True), y=my_scale(float(y), y=True))
     # check events
+    button_color = (180, 230, 230)
+    font = pygame.font.SysFont('Corbel', 35)
+    text_stop = font.render('Stop', True, button_color)
+
+    move_counter = (client.get_info().split(':')[4]).split(',')[0]
+    time_to_end = int(client.time_to_end()) / 1000
+    text_move_counter = font.render(f'Move Counter: {move_counter}', True, button_color)
+    text_time_to_end = font.render(f'Time to End: {time_to_end}', True, button_color)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit(0)
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if 0 <= mouse[0] <= 68 and 0 <= mouse[1] <= 40:
+                client.stop()
 
     # refresh surface
     screen.fill(Color(0, 0, 0))
+    mouse = pygame.mouse.get_pos()
+
+    # if mouse is hovered on a button it
+    # changes to lighter shade
+    if 0 <= mouse[0] <= 68 and 0 <= mouse[1] <= 40:
+        pygame.draw.rect(screen, (170, 170, 170), [0, 0, 68, 40])
+        pygame.draw.rect(screen, (170, 170, 170), [70, 0, 138, 40])
+        pygame.draw.rect(screen, (170, 170, 170), [170, 0, 208, 40])
+
+    else:
+        pygame.draw.rect(screen, (100, 100, 100), [0, 0, 68, 40])
+        pygame.draw.rect(screen, (100, 100, 100), [70, 0, 270, 40])
+        pygame.draw.rect(screen, (100, 100, 100), [342, 0, 280, 40])
+
+    # superimposing the text onto our button
+    screen.blit(text_stop, (0, 0))
+    screen.blit(text_move_counter, (70, 0))
+    screen.blit(text_time_to_end, (342, 0))
 
     # draw nodes
     for n in graph.Nodes:
@@ -153,7 +174,6 @@ while client.is_running() == 'true':
         pygame.draw.line(screen, Color(61, 72, 126),
                          (src_x, src_y), (dest_x, dest_y))
 
-
     # draw agents
     for agent in agents:
         pygame.draw.circle(screen, Color(122, 61, 23),
@@ -179,11 +199,9 @@ while client.is_running() == 'true':
             print(ttl, client.get_info())
 
     time_from_last_move = t.time() - last_move_time
-    # print("time from last move: ", time_from_last_move)
 
     if time_from_last_move >= 0.1:
         client.move()
         last_move_time = t.time()
-        # print(last_move_time)
 
 # game over:
