@@ -129,9 +129,8 @@ while client.is_running() == 'true':
     # changes to lighter shade
     if 0 <= mouse[0] <= 68 and 0 <= mouse[1] <= 40:
         pygame.draw.rect(screen, (170, 170, 170), [0, 0, 68, 40])
-        pygame.draw.rect(screen, (170, 170, 170), [70, 0, 138, 40])
-        pygame.draw.rect(screen, (170, 170, 170), [170, 0, 208, 40])
-
+        pygame.draw.rect(screen, (100, 100, 100), [70, 0, 270, 40])
+        pygame.draw.rect(screen, (100, 100, 100), [342, 0, 280, 40])
     else:
         pygame.draw.rect(screen, (100, 100, 100), [0, 0, 68, 40])
         pygame.draw.rect(screen, (100, 100, 100), [70, 0, 270, 40])
