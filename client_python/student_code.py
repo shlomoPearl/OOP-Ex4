@@ -147,7 +147,7 @@ def arrow_offsets(source, dest, r):
     dest_pos = g.nodes[dest].position
     dy = dest_pos[1] - source_pos[1]
     dx = dest_pos[0] - source_pos[0]
-    distance = m.sqrt(math.pow(dx, 2) + m.pow(dy, 2))
+    distance = m.sqrt(m.pow(dx, 2) + m.pow(dy, 2))
     sin = dy / distance
     cos = dx / distance
     x_offset = r * cos
@@ -156,9 +156,8 @@ def arrow_offsets(source, dest, r):
 
 
 def draw_arrow(start, end):
-    # x_offset, y_offset = arrow_offsets(start, end, radius)
     rotation = m.degrees(
-        m.atan2(start[1] - (end[1]), end[0] - (start[0]))) + 90
+        m.atan2(start[1] - end[1], end[0] - start[0])) + 90
     arrow_size = 7
     pygame.draw.polygon(screen, Color('dark slate grey'), (
         (end[0] + arrow_size * m.sin(m.radians(rotation)), end[1] + arrow_size * m.cos(m.radians(rotation))),
@@ -307,9 +306,11 @@ while client.is_running() == 'true':
         dest_x = g.nodes[dest].position[0] * x_factor + margin
         dest_y = g.nodes[dest].position[1] * y_factor + margin
 
-        # draw the line
-        pygame.draw.line(screen, Color('dark slate grey'), (src_x, src_y), (dest_x, dest_y))
-        draw_arrow((src_x, src_y), (dest_x, dest_y))
+        # draw the line with arrow
+        x_offset, y_offset = arrow_offsets(src, dest, radius)
+        pygame.draw.line(screen, Color('dark slate grey'), (src_x + x_offset, src_y + y_offset),
+                         (dest_x - x_offset, dest_y - y_offset))
+        draw_arrow((src_x+x_offset, src_y+y_offset), (dest_x-x_offset, dest_y-y_offset))
 
         # add arrow heads
 
