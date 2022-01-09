@@ -3,6 +3,7 @@
 OOP - Ex4
 Very simple GUI example for python client to communicates with the server and "play the game!"
 """
+import math
 import math as m
 import random
 import threading
@@ -121,19 +122,6 @@ for key in g.nodes:
     x, y = g.nodes[key].position[:-1]
     g.nodes[key].position = (x - g.min_x), (y - g.min_y), 0
 
-# def arrow_offsets(self, source, dest, r):
-#     source_pos = self.g.nodes[source].position
-#     dest_pos = self.g.nodes[dest].position
-#     dy = dest_pos[1] - source_pos[1]
-#     dx = dest_pos[0] - source_pos[0]
-#     distance = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
-#     sin = dy / distance
-#     cos = dx / distance
-#     x_offset = r * cos
-#     y_offset = r * sin
-#     return x_offset, y_offset
-
-
 radius = 15
 
 
@@ -152,6 +140,33 @@ def gota_cathem_all(node_list, agent):
             if agent.dest == -1:
                 client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(node) + '}')
     return
+
+
+def arrow_offsets(source, dest, r):
+    source_pos = g.nodes[source].position
+    dest_pos = g.nodes[dest].position
+    dy = dest_pos[1] - source_pos[1]
+    dx = dest_pos[0] - source_pos[0]
+    distance = m.sqrt(math.pow(dx, 2) + m.pow(dy, 2))
+    sin = dy / distance
+    cos = dx / distance
+    x_offset = r * cos
+    y_offset = r * sin
+    return x_offset, y_offset
+
+
+def draw_arrow(start, end):
+    # x_offset, y_offset = arrow_offsets(start, end, radius)
+    rotation = m.degrees(
+        m.atan2(start[1] - (end[1]), end[0] - (start[0]))) + 90
+    arrow_size = 7
+    pygame.draw.polygon(screen, Color('dark slate grey'), (
+        (end[0] + arrow_size * m.sin(m.radians(rotation)), end[1] + arrow_size * m.cos(m.radians(rotation))),
+        (
+            end[0] + arrow_size * m.sin(m.radians(rotation - 120)),
+            end[1] + arrow_size * m.cos(m.radians(rotation - 120))),
+        (end[0] + arrow_size * m.sin(m.radians(rotation + 120)),
+         end[1] + arrow_size * m.cos(m.radians(rotation + 120)))))
 
 
 info = json.loads(client.get_info())["GameServer"]
@@ -206,8 +221,8 @@ while client.is_running() == 'true':
     # font_percent = int(25 * current_height / 720)
 
     button_color = (180, 230, 230)
-    font = pygame.font.SysFont('ComicSans', font_percent, bold=True,)
-    text_stop = font.render('Stop',True,button_color)
+    font = pygame.font.SysFont('ComicSans', font_percent, bold=True, )
+    text_stop = font.render('Stop', True, button_color)
 
     time_to_end = format((float(client.time_to_end()) / 1000), ".1f")
     move_counter = (client.get_info().split(':')[4]).split(',')[0]
@@ -294,6 +309,7 @@ while client.is_running() == 'true':
 
         # draw the line
         pygame.draw.line(screen, Color('dark slate grey'), (src_x, src_y), (dest_x, dest_y))
+        draw_arrow((src_x, src_y), (dest_x, dest_y))
 
         # add arrow heads
 
