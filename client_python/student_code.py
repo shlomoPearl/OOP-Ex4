@@ -299,20 +299,20 @@ while client.is_running() == 'true':
                       y_percent])
     # draw button for time to end
     pygame.draw.rect(screen, (100, 100, 100),
-                     [move_x_percent + offset_percent, offset_percent, time_x_percent - move_x_percent,
+                     [move_x_percent + 2 * offset_percent, offset_percent, time_x_percent - move_x_percent,
                       y_percent])
     # draw button for grade
     pygame.draw.rect(screen, (100, 100, 100),
-                     [time_x_percent + offset_percent * 2, offset_percent, grade_x_percent - (time_x_percent - offset_percent),
+                     [time_x_percent + 3 * offset_percent, offset_percent, grade_x_percent - (time_x_percent - offset_percent),
                       y_percent])
 
     # superimposing the text onto our button
     text_y_percent = (0.3 * current_width) // 100 + 1
 
-    screen.blit(text_stop, (text_y_percent, text_y_percent))
-    screen.blit(text_move_counter, (stop_x_percent + text_y_percent + offset_percent, text_y_percent))
-    screen.blit(text_time_to_end, (move_x_percent + text_y_percent + offset_percent, text_y_percent))
-    screen.blit(text_grade, (time_x_percent + text_y_percent + offset_percent * 2.5, text_y_percent))
+    screen.blit(text_stop, (text_y_percent + 2 * offset_percent, text_y_percent))
+    screen.blit(text_move_counter, (stop_x_percent + text_y_percent + 3 * offset_percent, text_y_percent))
+    screen.blit(text_time_to_end, (move_x_percent + text_y_percent + 3 * offset_percent, text_y_percent))
+    screen.blit(text_grade, (time_x_percent + text_y_percent + offset_percent * 4, text_y_percent))
 
     draw_edges()
     draw_nodes()
