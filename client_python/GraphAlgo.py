@@ -3,60 +3,53 @@ import math
 import copy
 import tkinter as tk
 from typing import List
-from client_python.GraphAlgoInterface import GraphAlgoInterface
-from client_python.GraphInterface import GraphInterface
 from client_python.DiGraph import DiGraph
 from collections import deque
 import random
 
 
-class GraphAlgo(GraphAlgoInterface):
+class GraphAlgo:
 
     def __init__(self, graph: DiGraph = DiGraph()):
         self.g = graph
 
     """This abstract class represents an interface of a graph."""
 
-    def get_graph(self) -> GraphInterface:
+    def get_graph(self) -> DiGraph:
         """
         :return: the directed graph on which the algorithm works on.
         """
         return self.g
 
-    def load_from_json(self, file_name: str) -> bool:
+    def load_from_json(self, json_string: str) -> bool:
         """
         Loads a graph from a json file.
         @param file_name: The path to the json file
         @returns True if the loading was successful, False o.w.
         """
-        try:
-            with open(file_name) as file:
-                json_graph = json.load(
-                    file)  # loaded file to dict: {"Edges": [{}, {}, {}...], "Nodes": [{}, {}, {}...]}
-            node_list = json_graph["Nodes"]
-            edge_list = json_graph["Edges"]
-            # iterate over node_list to save nodes to graph
-            graph = DiGraph()
-            for node in node_list:
-                key = node["id"]
-                graph.add_node(key, None)
-                if "pos" in node:
-                    pos_string_list = node["pos"].split(",")
-                    # make stings of numbers into actual float variables:
-                    pos_tuple = float(pos_string_list[0]), float(pos_string_list[1]), float(pos_string_list[2])
-                    graph.nodes[key].position = pos_tuple
-                else:
-                    graph.ensure_position(key)
-                graph.update_min_max(key)
+        json_graph = json.loads(json_string)
+        node_list = json_graph["Nodes"]
+        edge_list = json_graph["Edges"]
+        # iterate over node_list to save nodes to graph
+        graph = DiGraph()
+        for node in node_list:
+            key = node["id"]
+            graph.add_node(key, None)
+            if "pos" in node:
+                pos_string_list = node["pos"].split(",")
+                # make stings of numbers into actual float variables:
+                pos_tuple = float(pos_string_list[0]), float(pos_string_list[1]), float(pos_string_list[2])
+                graph.nodes[key].position = pos_tuple
+            else:
+                graph.ensure_position(key)
+            graph.update_min_max(key)
 
+        # iterate over node_list to save nodes to graph
+        for edge in edge_list:
             # iterate over node_list to save nodes to graph
-            for edge in edge_list:
-                # iterate over node_list to save nodes to graph
-                graph.add_edge(edge["src"], edge["dest"], edge["w"])
-            self.g = graph
-            return True
-        except OSError:
-            return False
+            graph.add_edge(edge["src"], edge["dest"], edge["w"])
+        self.g = graph
+        return True
 
     def save_to_json(self, file_name: str) -> bool:
         """
@@ -94,17 +87,17 @@ class GraphAlgo(GraphAlgoInterface):
         @param id2: The end node id
         @return: The distance of the path, a list of the nodes ids that the path goes through
         Example:
-#      >>> from GraphAlgo import GraphAlgo
-#       >>> g_algo = GraphAlgo()
-#        >>> g_algo.addNode(0)
-#        >>> g_algo.addNode(1)
-#        >>> g_algo.addNode(2)
-#        >>> g_algo.addEdge(0,1,1)
-#        >>> g_algo.addEdge(1,2,4)
-#        >>> g_algo.shortestPath(0,1)
-#        (1, [0, 1])
-#        >>> g_algo.shortestPath(0,2)
-#        (5, [0, 1, 2])
+    #      >>> from GraphAlgo import GraphAlgo
+    #       >>> g_algo = GraphAlgo()
+    #        >>> g_algo.addNode(0)
+    #        >>> g_algo.addNode(1)
+    #        >>> g_algo.addNode(2)
+    #        >>> g_algo.addEdge(0,1,1)
+    #        >>> g_algo.addEdge(1,2,4)
+    #        >>> g_algo.shortestPath(0,1)
+    #        (1, [0, 1])
+    #        >>> g_algo.shortestPath(0,2)
+    #        (5, [0, 1, 2])
         Notes:
         If there is no path between id1 and id2, or one of them dose not exist the function returns (float('inf'),[])
         More info:
@@ -117,7 +110,7 @@ class GraphAlgo(GraphAlgoInterface):
         unchecked_nodes[id1].in_weight = 0
         result = []  # initialize empty list (to be filled and returned)
         if id1 == id2:  # one node - no path
-            return 0, result.append(id1)
+            return 0, [id1]
         while len(unchecked_nodes) > 0:
             # save the node with the minimum in-weight. this will change in the course of the loop
             current_key = min(unchecked_nodes.items(), key=lambda node_tuple: node_tuple[1].in_weight)[1].key

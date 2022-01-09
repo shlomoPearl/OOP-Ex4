@@ -1,11 +1,9 @@
 import math
-
-from client_python.GraphInterface import GraphInterface
 from client_python.Node import Node
 import random
 
 
-class DiGraph(GraphInterface):
+class DiGraph:
 
     def __init__(self):
         self.nodes = {}
