@@ -44,6 +44,20 @@ g = graph_algo.get_graph()
 epsilon = 0.00000001
 radius = 15
 
+# scale factors:
+current_width = screen.get_width()
+current_height = screen.get_height()
+
+diff_x = g.max_x - g.min_x
+diff_y = g.max_y - g.min_y
+x_factor = (current_width - 200) / diff_x
+y_factor = (current_height - 200) / diff_y
+margin = 100
+
+for key in g.nodes:
+    x, y = g.nodes[key].position[:-1]
+    g.nodes[key].position = (x - g.min_x), (y - g.min_y), 0
+
 
 def distance(point1, point2):
     dx_squared = m.pow((point1[0] - point2[0]), 2)  # (delta x)^2
@@ -87,22 +101,6 @@ def is_on_node(position: tuple) -> int:
             return node_key
 
 
-# scale:
-
-current_width = screen.get_width()
-current_height = screen.get_height()
-
-diff_x = g.max_x - g.min_x
-diff_y = g.max_y - g.min_y
-x_factor = (current_width - 200) / diff_x
-y_factor = (current_height - 200) / diff_y
-margin = 100
-
-for key in g.nodes:
-    x, y = g.nodes[key].position[:-1]
-    g.nodes[key].position = (x - g.min_x), (y - g.min_y), 0
-
-
 # def text_scale(text, font):
 #     text_surface = font.render(text, True, (180, 230, 230)).convert_alpha()
 #     cur_w, cur_h = screen.get_size()
@@ -110,14 +108,6 @@ for key in g.nodes:
 #     text_surface = pygame.transform.smoothscale(text_surface, (txt_w * cur_w // width, txt_h * cur_h // height))
 #
 #     return text_surface, text_surface.get_rect()
-
-
-def gota_cathem_all(node_list, agent):
-    if node_list is not None:
-        for node in node_list:
-            if agent.dest == -1:
-                client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(node) + '}')
-    return
 
 
 def arrow_offsets(source, dest, r):
@@ -144,15 +134,65 @@ def draw_arrow(start, end):
         (end[0] + arrow_size * m.sin(m.radians(rotation + 120)),
          end[1] + arrow_size * m.cos(m.radians(rotation + 120)))))
 
+def draw_edges():
+    # draw edges
+    for edge in g.edges:
+        # find the edge nodes
+        src = edge[0]
+        dest = edge[1]
+
+        # scaled positions
+        src_x = g.nodes[src].position[0] * x_factor + margin
+        src_y = g.nodes[src].position[1] * y_factor + margin
+        dest_x = g.nodes[dest].position[0] * x_factor + margin
+        dest_y = g.nodes[dest].position[1] * y_factor + margin
+
+        # draw the line with arrow
+        x_offset, y_offset = arrow_offsets(src, dest, radius + 7)
+        pygame.draw.line(screen, Color('dark slate grey'), (src_x + x_offset, src_y + y_offset),
+                         (dest_x - x_offset, dest_y - y_offset))
+        draw_arrow((src_x + x_offset, src_y + y_offset), (dest_x - x_offset, dest_y - y_offset))
+
+def draw_nodes():
+    # draw nodes
+    for node in g.nodes.values():
+        x = node.position[0] * x_factor + margin
+        y = node.position[1] * y_factor + margin
+
+        # its just to get a nice antialiased circle
+        gfxdraw.filled_circle(screen, int(x), int(y), radius, Color('lawn green'))
+        gfxdraw.aacircle(screen, int(x), int(y), radius, Color(0, 0, 0))
+
+        # draw the node id
+        id_srf = FONT.render(str(node.key), True, Color(0, 0, 0))
+        rect = id_srf.get_rect(center=(x, y))
+        screen.blit(id_srf, rect)
+
+def draw_pokemons():
+    for p in pokemons:
+        x = p.pos[0] * x_factor + margin
+        y = p.pos[1] * y_factor + margin
+
+        pygame.draw.circle(screen, Color(0, 255, 255), (x, y), 10)
+        image = pygame.image.load(r'..\pikachu_new.jpg')
+        screen.blit(image, (x - 20, y - 20))
+
+def draw_agents():
+    for agent in agents:
+        x = agent.pos[0] * x_factor + margin
+        y = agent.pos[1] * y_factor + margin
+
+        pygame.draw.circle(screen, Color(122, 61, 23), (x, y), 10)
+        image = pygame.image.load(r'..\ash_new.jpg')
+        screen.blit(image, (x - 20, y - 35))
+
 
 info = json.loads(client.get_info())["GameServer"]
-# print(info)
 number_of_agents = int(info["agents"])
 
 pokemons = json.loads(client.get_pokemons(), object_hook=lambda d: SimpleNamespace(**d)).Pokemons
 pokemons = sorted([p.Pokemon for p in pokemons], key=lambda p: int(p.value), reverse=True)
 
-# print(pokemons)
 for p in pokemons:
     x, y, _ = p.pos.split(',')
     p.pos = float(x) - g.min_x, float(y) - g.min_y
@@ -161,11 +201,41 @@ for p in pokemons:
     for i in range(number_of_agents):
         client.add_agent('{"id":' + str(pokemon_edge[0]) + "}")
 
+
+def gota_cathem_all(node_list, agent):
+    if node_list is not None:
+        for node in node_list:
+            if agent.dest == -1:
+                client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(node) + '}')
+    return
+
+def choose_next_node_algo():
+# choose next edge
+    for pokemon in pokemons:
+        allocated_agent = agents[0]
+        path = []
+        pok_type = int(pokemon.type)
+        pokemon_edge = is_on_edge(pokemon.pos, pok_type)
+        shortest_time = m.inf
+        ash = threading.Thread()
+        for agent in agents:
+            if agent.dest == -1 and not ash.is_alive():  # if agents isn't busy
+                agent_node_key = is_on_node(agent.pos)
+                currents_sp = graph_algo.shortest_path(agent_node_key, pokemon_edge[0])
+                currents_st = currents_sp[0] / agent.speed
+                if currents_st < shortest_time:
+                    shortest_time = currents_st
+                    path = currents_sp[1] + [pokemon_edge[1]]
+                    # print(path)
+                    allocated_agent = agent
+                ash.__init__(gota_cathem_all(path, allocated_agent))
+                ash.start()
+        # new thread
+
 # this commnad starts the server - the game is running now
 client.start()
 
 last_move_time = t.time()
-# print(last_move_time)
 
 while client.is_running() == 'true':
 
@@ -205,6 +275,10 @@ while client.is_running() == 'true':
     grade_x_percent = (72 * current_width) // 100
     offset_percent = (0.37 * current_width) // 100 + 1
 
+    # refresh surface
+    screen.fill('light grey')
+    mouse = pygame.mouse.get_pos()
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -213,27 +287,23 @@ while client.is_running() == 'true':
             if 0 <= mouse[0] <= stop_x_percent and 0 <= mouse[1] <= y_percent:
                 client.stop()
 
-    # refresh surface
-    screen.fill('light grey')
-    mouse = pygame.mouse.get_pos()
-
     # if mouse is hovered on a button it
     # changes to lighter shade
     if 0 <= mouse[0] <= 68 and 0 <= mouse[1] <= 40:
-        pygame.draw.rect(screen, (170, 170, 170), [0, 0, stop_x_percent, y_percent])
+        pygame.draw.rect(screen, (170, 170, 170), [offset_percent, offset_percent, stop_x_percent, y_percent])
     else:
-        pygame.draw.rect(screen, (100, 100, 100), [0, 0, stop_x_percent, y_percent])
+        pygame.draw.rect(screen, (100, 100, 100), [offset_percent, offset_percent, stop_x_percent, y_percent])
     # draw button for number of moves
     pygame.draw.rect(screen, (100, 100, 100),
-                     [stop_x_percent + offset_percent, 0, move_x_percent - (stop_x_percent + offset_percent),
+                     [stop_x_percent + 2 * offset_percent, offset_percent, move_x_percent - (stop_x_percent + offset_percent),
                       y_percent])
     # draw button for time to end
     pygame.draw.rect(screen, (100, 100, 100),
-                     [move_x_percent + offset_percent, 0, time_x_percent - move_x_percent,
+                     [move_x_percent + offset_percent, offset_percent, time_x_percent - move_x_percent,
                       y_percent])
     # draw button for grade
     pygame.draw.rect(screen, (100, 100, 100),
-                     [time_x_percent + offset_percent * 2.5, 0, grade_x_percent - (time_x_percent - offset_percent),
+                     [time_x_percent + offset_percent * 2, offset_percent, grade_x_percent - (time_x_percent - offset_percent),
                       y_percent])
 
     # superimposing the text onto our button
@@ -244,57 +314,10 @@ while client.is_running() == 'true':
     screen.blit(text_time_to_end, (move_x_percent + text_y_percent + offset_percent, text_y_percent))
     screen.blit(text_grade, (time_x_percent + text_y_percent + offset_percent * 2.5, text_y_percent))
 
-    # draw nodes
-    for node in g.nodes.values():
-        x = node.position[0] * x_factor + margin
-        y = node.position[1] * y_factor + margin
-
-        # its just to get a nice antialiased circle
-        gfxdraw.filled_circle(screen, int(x), int(y), radius, Color('lawn green'))
-        gfxdraw.aacircle(screen, int(x), int(y), radius, Color(0, 0, 0))
-
-        # draw the node id
-        id_srf = FONT.render(str(node.key), True, Color(0, 0, 0))
-        rect = id_srf.get_rect(center=(x, y))
-        screen.blit(id_srf, rect)
-
-    # draw edges
-    for edge in g.edges:
-        # find the edge nodes
-        src = edge[0]
-        dest = edge[1]
-
-        # scaled positions
-        src_x = g.nodes[src].position[0] * x_factor + margin
-        src_y = g.nodes[src].position[1] * y_factor + margin
-        dest_x = g.nodes[dest].position[0] * x_factor + margin
-        dest_y = g.nodes[dest].position[1] * y_factor + margin
-
-        # draw the line with arrow
-        x_offset, y_offset = arrow_offsets(src, dest, radius + 7)
-        pygame.draw.line(screen, Color('dark slate grey'), (src_x + x_offset, src_y + y_offset),
-                         (dest_x - x_offset, dest_y - y_offset))
-        draw_arrow((src_x + x_offset, src_y + y_offset), (dest_x - x_offset, dest_y - y_offset))
-
-        # add arrow heads
-
-    # draw agents
-    for agent in agents:
-        x = agent.pos[0] * x_factor + margin
-        y = agent.pos[1] * y_factor + margin
-
-        pygame.draw.circle(screen, Color(122, 61, 23), (x, y), 10)
-        image = pygame.image.load(r'..\ash_new.jpg')
-        screen.blit(image, (x - 20, y - 35))
-
-    # draw pokemons
-    for p in pokemons:
-        x = p.pos[0] * x_factor + margin
-        y = p.pos[1] * y_factor + margin
-
-        pygame.draw.circle(screen, Color(0, 255, 255), (x, y), 10)
-        image = pygame.image.load(r'..\pikachu_new.jpg')
-        screen.blit(image, (x - 20, y - 20))
+    draw_edges()
+    draw_nodes()
+    draw_pokemons()
+    draw_agents()
 
     # update screen changes
     display.update()
@@ -302,31 +325,12 @@ while client.is_running() == 'true':
     # refresh rate
     clock.tick(60)
 
-    # choose next edge
-    for pokemon in pokemons:
-        allocated_agent = agents[0]
-        path = []
-        pok_type = int(pokemon.type)
-        pokemon_edge = is_on_edge(pokemon.pos, pok_type)
-        shortest_time = m.inf
-        ash = threading.Thread()
-        for agent in agents:
-            if agent.dest == -1 and not ash.is_alive():  # if agents isn't busy
-                agent_node_key = is_on_node(agent.pos)
-                currents_sp = graph_algo.shortest_path(agent_node_key, pokemon_edge[0])
-                currents_st = currents_sp[0] / agent.speed
-                if currents_st < shortest_time:
-                    shortest_time = currents_st
-                    path = currents_sp[1] + [pokemon_edge[1]]
-                    # print(path)
-                    allocated_agent = agent
-                ash.__init__(gota_cathem_all(path, allocated_agent))
-                ash.start()
-        # new thread
+    choose_next_node_algo()
 
+    # clock moves in-order to stay under 10 moves a second
     time_from_last_move = t.time() - last_move_time
 
-    if time_from_last_move >= 0.085:
+    if time_from_last_move >= 0.095:
         client.move()
         last_move_time = t.time()
 

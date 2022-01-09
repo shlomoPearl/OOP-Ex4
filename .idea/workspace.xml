@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="6c35775e-b106-488e-a677-3f2b87b1f9ef" name="Changes" comment="REFACTORING AND TIDYING" />
+    <list default="true" id="6c35775e-b106-488e-a677-3f2b87b1f9ef" name="Changes" comment="REFACTORING AND TIDYING">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_python/student_code.py" beforeDir="false" afterPath="$PROJECT_DIR$/client_python/student_code.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -244,7 +247,19 @@
       <option name="presentableId" value="LOCAL‎00009" />
       <updated>1641759116327</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL‎00010" summary="REFACTORING AND TIDYING">
+      <created>1641759438737</created>
+      <option name="number" value="LOCAL‎00010" />
+      <option name="presentableId" value="LOCAL‎00010" />
+      <updated>1641759438737</updated>
+    </task>
+    <task id="LOCAL‎00011" summary="REFACTORING AND TIDYING">
+      <created>1641759450523</created>
+      <option name="number" value="LOCAL‎00011" />
+      <option name="presentableId" value="LOCAL‎00011" />
+      <updated>1641759450523</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
