@@ -36,6 +36,11 @@ pygame.font.init()
 client = Client()
 client.start_connection(HOST, PORT)
 
+# pokemons = client.get_pokemons()
+# pokemons_obj = json.loads(pokemons, object_hook=lambda d: SimpleNamespace(**d))
+
+# print(pokemons)
+
 graph_json = client.get_graph()
 
 FONT = pygame.font.SysFont('Arial', 20, bold=True)
@@ -116,6 +121,11 @@ def is_on_node(position: tuple) -> int:
 
 # scale:
 
+diff_x = g.max_x - g.min_x
+diff_y = g.max_y - g.min_y
+x_factor = (width - 200) / diff_x
+y_factor = (height - 200) / diff_y
+margin = 100
 
 for key in g.nodes:
     x, y = g.nodes[key].position[:-1]
@@ -135,15 +145,6 @@ for key in g.nodes:
 
 
 radius = 15
-
-
-# def text_scale(text, font):
-#     text_surface = font.render(text, True, (180, 230, 230)).convert_alpha()
-#     cur_w, cur_h = screen.get_size()
-#     txt_w, txt_h = text_surface.get_size()
-#     text_surface = pygame.transform.smoothscale(text_surface, (txt_w * cur_w // width, txt_h * cur_h // height))
-#
-#     return text_surface, text_surface.get_rect()
 
 
 def gota_cathem_all(node_list, agent):
@@ -193,22 +194,10 @@ while client.is_running() == 'true':
         x, y, _ = p.pos.split(',')
         p.pos = float(x) - g.min_x, float(y) - g.min_y
 
-    current_width = screen.get_width()
-    current_height = screen.get_height()
-
-    diff_x = g.max_x - g.min_x
-    diff_y = g.max_y - g.min_y
-    x_factor = (current_width - 200) / diff_x
-    y_factor = (current_height - 200) / diff_y
-    margin = 100
-
-    font_percent = int(((3.571 * current_height) // 100 + (2.314 * current_width) // 100) / 2)
-    # font_percent = int(25 * current_height / 720)
-
+    # check events
     button_color = (180, 230, 230)
-    font = pygame.font.SysFont('ComicSans', font_percent, bold=True,)
-    text_stop = font.render('Stop',True,button_color)
-
+    font = pygame.font.SysFont('ComicSans', 25, bold=True)
+    text_stop = font.render('Stop', True, button_color)
     time_to_end = format((float(client.time_to_end()) / 1000), ".1f")
     move_counter = (client.get_info().split(':')[4]).split(',')[0]
     time_to_end = int(client.time_to_end()) / 1000
@@ -220,51 +209,34 @@ while client.is_running() == 'true':
     else:
         text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, 'red')
 
-    y_percent = (5.7 * current_height) // 100
-    stop_x_percent = (6.3 * current_width) // 100
-    move_x_percent = (29 * current_width) // 100
-    time_x_percent = (58 * current_width) // 100
-    grade_x_percent = (72 * current_width) // 100
-    offset_percent = (0.37 * current_width) // 100 + 1
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit(0)
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if 0 <= mouse[0] <= stop_x_percent and 0 <= mouse[1] <= y_percent:
+            if 0 <= mouse[0] <= 68 and 0 <= mouse[1] <= 40:
                 client.stop()
 
     # refresh surface
-    screen.fill('light grey')
+    screen.fill(Color(0, 0, 0))
     mouse = pygame.mouse.get_pos()
 
     # if mouse is hovered on a button it
     # changes to lighter shade
     if 0 <= mouse[0] <= 68 and 0 <= mouse[1] <= 40:
-        pygame.draw.rect(screen, (170, 170, 170), [0, 0, stop_x_percent, y_percent])
+        pygame.draw.rect(screen, (170, 170, 170), [0, 0, 68, 40])
     else:
-        pygame.draw.rect(screen, (100, 100, 100), [0, 0, stop_x_percent, y_percent])
-    # draw button for number of moves
-    pygame.draw.rect(screen, (100, 100, 100),
-                     [stop_x_percent + offset_percent, 0, move_x_percent - (stop_x_percent + offset_percent),
-                      y_percent])
-    # draw button for time to end
-    pygame.draw.rect(screen, (100, 100, 100),
-                     [move_x_percent + offset_percent, 0, time_x_percent - move_x_percent,
-                      y_percent])
-    # draw button for grade
-    pygame.draw.rect(screen, (100, 100, 100),
-                     [time_x_percent + offset_percent * 2.5, 0, grade_x_percent - (time_x_percent - offset_percent),
-                      y_percent])
+        pygame.draw.rect(screen, (100, 100, 100), [0, 0, 68, 40])
+
+    pygame.draw.rect(screen, (100, 100, 100), [72, 0, 275, 40])
+    pygame.draw.rect(screen, (100, 100, 100), [351, 0, 340, 40])
+    pygame.draw.rect(screen, (100, 100, 100), [697, 0, 180, 40])
 
     # superimposing the text onto our button
-    text_y_percent = (0.3 * current_width) // 100 + 1
-
-    screen.blit(text_stop, (text_y_percent, text_y_percent))
-    screen.blit(text_move_counter, (stop_x_percent + text_y_percent + offset_percent, text_y_percent))
-    screen.blit(text_time_to_end, (move_x_percent + text_y_percent + offset_percent, text_y_percent))
-    screen.blit(text_grade, (time_x_percent + text_y_percent + offset_percent * 2.5, text_y_percent))
+    screen.blit(text_stop, (3, 3))
+    screen.blit(text_move_counter, (80, 3))
+    screen.blit(text_time_to_end, (356, 3))
+    screen.blit(text_grade, (700, 3))
 
     # draw nodes
     for node in g.nodes.values():
