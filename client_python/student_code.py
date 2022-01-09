@@ -146,7 +146,6 @@ for key in g.nodes:
 
 radius = 15
 
-
 def gota_cathem_all(node_list, agent):
     if node_list is not None:
         for node in node_list:
@@ -166,15 +165,17 @@ for p in pokemons:
     p.pos = float(x) - g.min_x, float(y) - g.min_y
     pokemon_edge = is_on_edge(p.pos, p.type)
     print(pokemon_edge)
-    for i in range(number_of_agents):
+    if number_of_agents > 0:
         client.add_agent('{"id":' + str(pokemon_edge[0]) + "}")
+        number_of_agents -= 1
+
+while number_of_agents > 0:
+    random_key = random.choice(list(g.nodes.keys()))
+    client.add_agent('{"id":' + str(random_key) + "}")
+    number_of_agents -= 1
 
 # this commnad starts the server - the game is running now
 client.start()
-
-
-
-
 
 """
 The code below should be improved significantly:
@@ -313,7 +314,6 @@ while client.is_running() == 'true':
                     if currents_st < shortest_time:
                         shortest_time = currents_st
                         path = currents_sp[1] + [pokemon_edge[1]]
-                        print(path)
                         allocated_agent = agent
                     ash.__init__(gota_cathem_all(path, allocated_agent))
                     ash.start()
