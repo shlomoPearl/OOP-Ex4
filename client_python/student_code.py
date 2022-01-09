@@ -91,7 +91,7 @@ def area_of_triangle(point1, point2, point3):
     S = (a + b + c) / 2
     sq = S * (S - a) * (S - b) * (S - c)
     if sq > 0:
-        return m.sqrt(sq) # Heron's formula
+        return m.sqrt(sq)  # Heron's formula
     else:
         return 0.0
 
@@ -154,27 +154,24 @@ def gota_cathem_all(node_list, agent):
                 client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(node) + '}')
     return
 
+
 info = json.loads(client.get_info())["GameServer"]
-print(info)
+# print(info)
 number_of_agents = int(info["agents"])
 
 pokemons = json.loads(client.get_pokemons(), object_hook=lambda d: SimpleNamespace(**d)).Pokemons
 pokemons = sorted([p.Pokemon for p in pokemons], key=lambda p: int(p.value), reverse=True)
-print(pokemons)
+# print(pokemons)
 for p in pokemons:
     x, y, _ = p.pos.split(',')
     p.pos = float(x) - g.min_x, float(y) - g.min_y
     pokemon_edge = is_on_edge(p.pos, p.type)
-    print(pokemon_edge)
+    # print(pokemon_edge)
     for i in range(number_of_agents):
         client.add_agent('{"id":' + str(pokemon_edge[0]) + "}")
 
 # this commnad starts the server - the game is running now
 client.start()
-
-
-
-
 
 """
 The code below should be improved significantly:
@@ -185,7 +182,6 @@ last_move_time = t.time()
 # print(last_move_time)
 
 while client.is_running() == 'true':
-
     agents = json.loads(client.get_agents(), object_hook=lambda d: SimpleNamespace(**d)).Agents
     agents = [agent.Agent for agent in agents]
     for a in agents:
@@ -202,18 +198,17 @@ while client.is_running() == 'true':
     button_color = (180, 230, 230)
     font = pygame.font.SysFont('ComicSans', 25, bold=True)
     text_stop = font.render('Stop', True, button_color)
-
+    time_to_end = format((float(client.time_to_end()) / 1000), ".1f")
     move_counter = (client.get_info().split(':')[4]).split(',')[0]
     time_to_end = int(client.time_to_end()) / 1000
+    grade = int(client.get_info().split(':')[5].split(',')[0])
     text_move_counter = font.render(f'Move Counter: {move_counter}', True, button_color)
+    text_grade = font.render(f'Grade: {grade}', True, button_color)
     if time_to_end > 10:
-        text_time_to_end = font.render(f'Time to End: {time_to_end}', True, button_color)
+        text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, button_color)
     else:
-        text_time_to_end = font.render(f'Time to End: {time_to_end}', True, 'red')
+        text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, 'red')
 
-    time_to_end = format((float(client.time_to_end()) / 1000), ".1f")
-    text_move_counter = font.render(f'Moves Counter: {move_counter}', True, button_color)
-    text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, button_color)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -235,11 +230,13 @@ while client.is_running() == 'true':
 
     pygame.draw.rect(screen, (100, 100, 100), [72, 0, 275, 40])
     pygame.draw.rect(screen, (100, 100, 100), [351, 0, 340, 40])
+    pygame.draw.rect(screen, (100, 100, 100), [697, 0, 180, 40])
 
     # superimposing the text onto our button
     screen.blit(text_stop, (3, 3))
     screen.blit(text_move_counter, (80, 3))
     screen.blit(text_time_to_end, (356, 3))
+    screen.blit(text_grade, (700, 3))
 
     # draw nodes
     for node in g.nodes.values():
@@ -283,7 +280,6 @@ while client.is_running() == 'true':
 
     # draw pokemons
     for p in pokemons:
-
         x = p.pos[0] * x_factor + margin
         y = p.pos[1] * y_factor + margin
 
@@ -291,33 +287,33 @@ while client.is_running() == 'true':
         image = pygame.image.load(r'..\pikachu_new.jpg')
         screen.blit(image, (x - 20, y - 20))
 
-        # update screen changes
-        display.update()
+    # update screen changes
+    display.update()
 
-        # refresh rate
-        clock.tick(60)
+    # refresh rate
+    clock.tick(60)
 
-        # choose next edge
-        for pokemon in pokemons:
-            allocated_agent = agents[0]
-            path = []
-            pok_type = int(pokemon.type)
-            pokemon_edge = is_on_edge(pokemon.pos, pok_type)
-            shortest_time = m.inf
-            ash = threading.Thread()
-            for agent in agents:
-                if agent.dest == -1 and not ash.is_alive():  # if agents isn't busy
-                    agent_node_key = is_on_node(agent.pos)
-                    currents_sp = graph_algo.shortest_path(agent_node_key, pokemon_edge[0])
-                    currents_st = currents_sp[0] / agent.speed
-                    if currents_st < shortest_time:
-                        shortest_time = currents_st
-                        path = currents_sp[1] + [pokemon_edge[1]]
-                        print(path)
-                        allocated_agent = agent
-                    ash.__init__(gota_cathem_all(path, allocated_agent))
-                    ash.start()
-            # new thread
+    # choose next edge
+    for pokemon in pokemons:
+        allocated_agent = agents[0]
+        path = []
+        pok_type = int(pokemon.type)
+        pokemon_edge = is_on_edge(pokemon.pos, pok_type)
+        shortest_time = m.inf
+        ash = threading.Thread()
+        for agent in agents:
+            if agent.dest == -1 and not ash.is_alive():  # if agents isn't busy
+                agent_node_key = is_on_node(agent.pos)
+                currents_sp = graph_algo.shortest_path(agent_node_key, pokemon_edge[0])
+                currents_st = currents_sp[0] / agent.speed
+                if currents_st < shortest_time:
+                    shortest_time = currents_st
+                    path = currents_sp[1] + [pokemon_edge[1]]
+                    # print(path)
+                    allocated_agent = agent
+                ash.__init__(gota_cathem_all(path, allocated_agent))
+                ash.start()
+        # new thread
 
     time_from_last_move = t.time() - last_move_time
 
