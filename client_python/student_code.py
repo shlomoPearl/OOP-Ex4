@@ -4,6 +4,7 @@ OOP - Ex4
 Very simple GUI example for python client to communicates with the server and "play the game!"
 """
 import math as m
+import random
 import threading
 import time as t
 from concurrent.futures import thread
@@ -69,11 +70,11 @@ graph_json = client.get_graph()
 FONT = pygame.font.SysFont('Arial', 20, bold=True)
 # load the json string into SimpleNamespace Object
 
-graph_algo = GraphAlgo();
+graph_algo = GraphAlgo()
 graph_algo.load_from_json(client.get_graph())
 g = graph_algo.get_graph()
 
-epsilon = 0.001
+epsilon = 0.00000001
 
 
 def distance(point1, point2):
@@ -84,12 +85,15 @@ def distance(point1, point2):
 
 
 def area_of_triangle(point1, point2, point3):
-    dist1 = distance(point1, point2)
-    dist2 = distance(point2, point3)
-    dist3 = distance(point3, point1)
-    perimeter = dist1 + dist2 + dist3  # perimeter
-    S = perimeter / 2
-    return m.sqrt(S * (S - dist1) * (S - dist2) * (S - dist3))  # Heron's formula
+    a = distance(point1, point2)
+    b = distance(point2, point3)
+    c = distance(point3, point1)
+    S = (a + b + c) / 2
+    sq = S * (S - a) * (S - b) * (S - c)
+    if sq > 0:
+        return m.sqrt(sq) # Heron's formula
+    else:
+        return 0.0
 
 
 def distance_of_point_from_edge(source, destination, point):
@@ -103,8 +107,8 @@ def distance_of_point_from_edge(source, destination, point):
 
 def is_on_edge(position: tuple, type: int) -> int:
     for edge_tuple in g.edges:
-        if distance_of_point_from_edge(edge_tuple[0], edge_tuple[1], position) < epsilon:
-            if (edge_tuple[1] - edge_tuple[0]) * type > 0:  # ensures pokemon is placed on the right edge (direction-wise)
+        if (edge_tuple[1] - edge_tuple[0]) * type > 0:  # edge is the same type of pokemon edge
+            if distance_of_point_from_edge(edge_tuple[0], edge_tuple[1], position) < epsilon:
                 return edge_tuple
 
 
@@ -121,7 +125,7 @@ diff_x = g.max_x - g.min_x
 diff_y = g.max_y - g.min_y
 x_factor = (width - 200) / diff_x
 y_factor = (height - 200) / diff_y
-margine = 100
+margin = 100
 
 for key in g.nodes:
     x, y = g.nodes[key].position[:-1]
@@ -138,15 +142,9 @@ for key in g.nodes:
 #     x_offset = r * cos
 #     y_offset = r * sin
 #     return x_offset, y_offset
-#
-#
 
 
 radius = 15
-num_of_agent = int(client.get_info().split(':')[10].split('}')[0])
-print(num_of_agent)
-for i in range(num_of_agent):
-    client.add_agent(f'{{\"id\":{i}}}')
 
 
 def gota_cathem_all(node_list, agent):
@@ -156,9 +154,27 @@ def gota_cathem_all(node_list, agent):
                 client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(node) + '}')
     return
 
+info = json.loads(client.get_info())["GameServer"]
+print(info)
+number_of_agents = int(info["agents"])
+
+pokemons = json.loads(client.get_pokemons(), object_hook=lambda d: SimpleNamespace(**d)).Pokemons
+pokemons = sorted([p.Pokemon for p in pokemons], key=lambda p: int(p.value), reverse=True)
+print(pokemons)
+for p in pokemons:
+    x, y, _ = p.pos.split(',')
+    p.pos = float(x) - g.min_x, float(y) - g.min_y
+    pokemon_edge = is_on_edge(p.pos, p.type)
+    print(pokemon_edge)
+    for i in range(number_of_agents):
+        client.add_agent('{"id":' + str(pokemon_edge[0]) + "}")
 
 # this commnad starts the server - the game is running now
 client.start()
+
+
+
+
 
 """
 The code below should be improved significantly:
@@ -177,7 +193,7 @@ while client.is_running() == 'true':
         a.pos = float(x) - g.min_x, float(y) - g.min_y
 
     pokemons = json.loads(client.get_pokemons(), object_hook=lambda d: SimpleNamespace(**d)).Pokemons
-    pokemons = [p.Pokemon for p in pokemons]
+    pokemons = sorted([p.Pokemon for p in pokemons], key=lambda p: int(p.value), reverse=True)
     for p in pokemons:
         x, y, _ = p.pos.split(',')
         p.pos = float(x) - g.min_x, float(y) - g.min_y
@@ -227,8 +243,8 @@ while client.is_running() == 'true':
 
     # draw nodes
     for node in g.nodes.values():
-        x = node.position[0] * x_factor + margine
-        y = node.position[1] * y_factor + margine
+        x = node.position[0] * x_factor + margin
+        y = node.position[1] * y_factor + margin
 
         # its just to get a nice antialiased circle
         gfxdraw.filled_circle(screen, int(x), int(y), radius, Color(64, 80, 174))
@@ -246,10 +262,10 @@ while client.is_running() == 'true':
         dest = edge[1]
 
         # scaled positions
-        src_x = g.nodes[src].position[0] * x_factor + margine
-        src_y = g.nodes[src].position[1] * y_factor + margine
-        dest_x = g.nodes[dest].position[0] * x_factor + margine
-        dest_y = g.nodes[dest].position[1] * y_factor + margine
+        src_x = g.nodes[src].position[0] * x_factor + margin
+        src_y = g.nodes[src].position[1] * y_factor + margin
+        dest_x = g.nodes[dest].position[0] * x_factor + margin
+        dest_y = g.nodes[dest].position[1] * y_factor + margin
 
         # draw the line
         pygame.draw.line(screen, Color(61, 72, 126), (src_x, src_y), (dest_x, dest_y))
@@ -258,8 +274,8 @@ while client.is_running() == 'true':
 
     # draw agents
     for agent in agents:
-        x = agent.pos[0] * x_factor + margine
-        y = agent.pos[1] * y_factor + margine
+        x = agent.pos[0] * x_factor + margin
+        y = agent.pos[1] * y_factor + margin
 
         pygame.draw.circle(screen, Color(122, 61, 23), (x, y), 10)
         image = pygame.image.load(r'..\ash_new.jpg')
@@ -268,8 +284,8 @@ while client.is_running() == 'true':
     # draw pokemons
     for p in pokemons:
 
-        x = p.pos[0] * x_factor + margine
-        y = p.pos[1] * y_factor + margine
+        x = p.pos[0] * x_factor + margin
+        y = p.pos[1] * y_factor + margin
 
         pygame.draw.circle(screen, Color(0, 255, 255), (x, y), 10)
         image = pygame.image.load(r'..\pikachu_new.jpg')
@@ -283,33 +299,29 @@ while client.is_running() == 'true':
 
         # choose next edge
         for pokemon in pokemons:
-
-            pok_type = int(pokemon.type)
-            pokemon_edge = is_on_edge(pokemon.pos, pok_type)
-            print(pokemon_edge)
-            shortest_time = m.inf
             allocated_agent = agents[0]
             path = []
-
+            pok_type = int(pokemon.type)
+            pokemon_edge = is_on_edge(pokemon.pos, pok_type)
+            shortest_time = m.inf
+            ash = threading.Thread()
             for agent in agents:
-                if agent.dest == -1:  # if agents isn't busy
+                if agent.dest == -1 and not ash.is_alive():  # if agents isn't busy
                     agent_node_key = is_on_node(agent.pos)
-                    print(agent_node_key)
-                    currents_sp = graph_algo.shortest_path(agent_node_key, pokemon_edge[1])
+                    currents_sp = graph_algo.shortest_path(agent_node_key, pokemon_edge[0])
                     currents_st = currents_sp[0] / agent.speed
                     if currents_st < shortest_time:
                         shortest_time = currents_st
-                        path = currents_sp[1]
+                        path = currents_sp[1] + [pokemon_edge[1]]
+                        print(path)
                         allocated_agent = agent
-                    print(path)
-
-        # new thread
-        ash = threading.Thread(gota_cathem_all(path, allocated_agent))
-        ash.start()
+                    ash.__init__(gota_cathem_all(path, allocated_agent))
+                    ash.start()
+            # new thread
 
     time_from_last_move = t.time() - last_move_time
 
-    if time_from_last_move >= 0.1:
+    if time_from_last_move >= 0.085:
         client.move()
         last_move_time = t.time()
 
