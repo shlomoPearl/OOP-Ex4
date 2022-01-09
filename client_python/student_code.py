@@ -20,7 +20,9 @@ from pygame import *
 from DiGraph import DiGraph
 from GraphAlgo import GraphAlgo
 
-WIDTH, HEIGHT = 1080, 720
+width_factor = 1.4
+height_factor = 1.1
+WIDTH, HEIGHT = 1080 * width_factor, 720 * height_factor
 
 # default port
 PORT = 6666
@@ -33,7 +35,7 @@ width = screen.get_width()
 height = screen.get_height()
 clock = pygame.time.Clock()
 pygame.font.init()
-FONT = pygame.font.SysFont('ComicSans', 30, bold=True)
+FONT = pygame.font.SysFont('ComicSans', 20, bold=True)
 
 client = Client()
 client.start_connection(HOST, PORT)
@@ -46,6 +48,7 @@ g = graph_algo.get_graph()
 
 epsilon = 0.00000001
 radius = 15
+
 
 def distance(point1, point2):
     dx_squared = m.pow((point1[0] - point2[0]), 2)  # (delta x)^2
@@ -100,10 +103,10 @@ x_factor = (current_width - 200) / diff_x
 y_factor = (current_height - 200) / diff_y
 margin = 100
 
-
 for key in g.nodes:
     x, y = g.nodes[key].position[:-1]
     g.nodes[key].position = (x - g.min_x), (y - g.min_y), 0
+
 
 # def text_scale(text, font):
 #     text_surface = font.render(text, True, (180, 230, 230)).convert_alpha()
@@ -253,7 +256,7 @@ while client.is_running() == 'true':
 
         # its just to get a nice antialiased circle
         gfxdraw.filled_circle(screen, int(x), int(y), radius, Color('lawn green'))
-        gfxdraw.aacircle(screen, int(x), int(y), radius, Color(255, 255, 255))
+        gfxdraw.aacircle(screen, int(x), int(y), radius, Color(0, 0, 0))
 
         # draw the node id
         id_srf = FONT.render(str(node.key), True, Color(0, 0, 0))
@@ -273,7 +276,7 @@ while client.is_running() == 'true':
         dest_y = g.nodes[dest].position[1] * y_factor + margin
 
         # draw the line with arrow
-        x_offset, y_offset = arrow_offsets(src, dest, radius)
+        x_offset, y_offset = arrow_offsets(src, dest, radius + 7)
         pygame.draw.line(screen, Color('dark slate grey'), (src_x + x_offset, src_y + y_offset),
                          (dest_x - x_offset, dest_y - y_offset))
         draw_arrow((src_x + x_offset, src_y + y_offset), (dest_x - x_offset, dest_y - y_offset))
