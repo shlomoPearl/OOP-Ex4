@@ -91,7 +91,7 @@ def area_of_triangle(point1, point2, point3):
     S = (a + b + c) / 2
     sq = S * (S - a) * (S - b) * (S - c)
     if sq > 0:
-        return m.sqrt(sq) # Heron's formula
+        return m.sqrt(sq)  # Heron's formula
     else:
         return 0.0
 
@@ -146,6 +146,7 @@ for key in g.nodes:
 
 radius = 15
 
+
 def gota_cathem_all(node_list, agent):
     if node_list is not None:
         for node in node_list:
@@ -153,13 +154,14 @@ def gota_cathem_all(node_list, agent):
                 client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(node) + '}')
     return
 
+
 info = json.loads(client.get_info())["GameServer"]
-print(info)
+# print(info)
 number_of_agents = int(info["agents"])
 
 pokemons = json.loads(client.get_pokemons(), object_hook=lambda d: SimpleNamespace(**d)).Pokemons
 pokemons = sorted([p.Pokemon for p in pokemons], key=lambda p: int(p.value), reverse=True)
-print(pokemons)
+# print(pokemons)
 for p in pokemons:
     x, y, _ = p.pos.split(',')
     p.pos = float(x) - g.min_x, float(y) - g.min_y
@@ -176,6 +178,10 @@ while number_of_agents > 0:
 
 # this commnad starts the server - the game is running now
 client.start()
+
+
+
+
 
 """
 The code below should be improved significantly:
@@ -203,18 +209,17 @@ while client.is_running() == 'true':
     button_color = (180, 230, 230)
     font = pygame.font.SysFont('ComicSans', 25, bold=True)
     text_stop = font.render('Stop', True, button_color)
-
+    time_to_end = format((float(client.time_to_end()) / 1000), ".1f")
     move_counter = (client.get_info().split(':')[4]).split(',')[0]
     time_to_end = int(client.time_to_end()) / 1000
+    grade = int(client.get_info().split(':')[5].split(',')[0])
     text_move_counter = font.render(f'Move Counter: {move_counter}', True, button_color)
+    text_grade = font.render(f'Grade: {grade}', True, button_color)
     if time_to_end > 10:
-        text_time_to_end = font.render(f'Time to End: {time_to_end}', True, button_color)
+        text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, button_color)
     else:
-        text_time_to_end = font.render(f'Time to End: {time_to_end}', True, 'red')
+        text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, 'red')
 
-    time_to_end = format((float(client.time_to_end()) / 1000), ".1f")
-    text_move_counter = font.render(f'Moves Counter: {move_counter}', True, button_color)
-    text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, button_color)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -236,11 +241,13 @@ while client.is_running() == 'true':
 
     pygame.draw.rect(screen, (100, 100, 100), [72, 0, 275, 40])
     pygame.draw.rect(screen, (100, 100, 100), [351, 0, 340, 40])
+    pygame.draw.rect(screen, (100, 100, 100), [697, 0, 180, 40])
 
     # superimposing the text onto our button
     screen.blit(text_stop, (3, 3))
     screen.blit(text_move_counter, (80, 3))
     screen.blit(text_time_to_end, (356, 3))
+    screen.blit(text_grade, (700, 3))
 
     # draw nodes
     for node in g.nodes.values():
@@ -292,11 +299,11 @@ while client.is_running() == 'true':
         image = pygame.image.load(r'..\pikachu_new.jpg')
         screen.blit(image, (x - 20, y - 20))
 
-        # update screen changes
-        display.update()
+    # update screen changes
+    display.update()
 
-        # refresh rate
-        clock.tick(60)
+    # refresh rate
+    clock.tick(60)
 
         # choose next edge
         for pokemon in pokemons:
