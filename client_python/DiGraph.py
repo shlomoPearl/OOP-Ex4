@@ -1,7 +1,7 @@
 import math
-from client_python.Node import Node
+import Node
 import random
-
+from Node import Node
 
 class DiGraph:
 

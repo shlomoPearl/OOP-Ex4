@@ -17,8 +17,8 @@ import pygame
 from pygame import *
 
 # init pygame
-from client_python.DiGraph import DiGraph
-from client_python.GraphAlgo import GraphAlgo
+from DiGraph import DiGraph
+from GraphAlgo import GraphAlgo
 
 WIDTH, HEIGHT = 1080, 720
 
@@ -153,6 +153,7 @@ number_of_agents = int(info["agents"])
 
 pokemons = json.loads(client.get_pokemons(), object_hook=lambda d: SimpleNamespace(**d)).Pokemons
 pokemons = sorted([p.Pokemon for p in pokemons], key=lambda p: int(p.value), reverse=True)
+
 # print(pokemons)
 for p in pokemons:
     x, y, _ = p.pos.split(',')
@@ -165,15 +166,11 @@ for p in pokemons:
 # this commnad starts the server - the game is running now
 client.start()
 
-"""
-The code below should be improved significantly:
-The GUI and the "algo" are mixed - refactoring using MVC design pattern is required.
-"""
-
 last_move_time = t.time()
 # print(last_move_time)
 
 while client.is_running() == 'true':
+
     agents = json.loads(client.get_agents(), object_hook=lambda d: SimpleNamespace(**d)).Agents
     agents = [agent.Agent for agent in agents]
     for a in agents:
@@ -198,7 +195,7 @@ while client.is_running() == 'true':
     grade = int(client.get_info().split(':')[5].split(',')[0])
     text_move_counter = font.render(f'Move Counter: {move_counter}', True, button_color)
     text_grade = font.render(f'Grade: {grade}', True, button_color)
-    if time_to_end > 10:
+    if float(time_to_end) > 10:
         text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, button_color)
     else:
         text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, 'red')

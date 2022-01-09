@@ -3,7 +3,7 @@ import math
 import copy
 import tkinter as tk
 from typing import List
-from client_python.DiGraph import DiGraph
+from DiGraph import DiGraph
 from collections import deque
 import random
 
