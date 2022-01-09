@@ -1,5 +1,4 @@
 from typing import Any
-
 import math
 import math as m
 import random
@@ -92,7 +91,7 @@ def update_scale():
     global font_percent
     font_percent = int(((3.571 * height) // 100 + (2.314 * width) // 100) / 2)
 
-update_scale()
+update_scale() # initialize first scale parameters
 
 for key in g.nodes:
     x, y = g.nodes[key].position[:-1]
