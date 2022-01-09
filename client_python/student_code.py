@@ -44,6 +44,7 @@ client.start_connection(HOST, PORT)
 graph_json = client.get_graph()
 
 FONT = pygame.font.SysFont('Arial', 20, bold=True)
+
 # load the json string into SimpleNamespace Object
 
 # def scale(data, min_screen, max_screen, min_data, max_data):
@@ -158,6 +159,7 @@ def gota_cathem_all(node_list, agent):
 info = json.loads(client.get_info())["GameServer"]
 # print(info)
 number_of_agents = int(info["agents"])
+print(number_of_agents)
 
 pokemons = json.loads(client.get_pokemons(), object_hook=lambda d: SimpleNamespace(**d)).Pokemons
 pokemons = sorted([p.Pokemon for p in pokemons], key=lambda p: int(p.value), reverse=True)
@@ -169,6 +171,7 @@ for p in pokemons:
     print(pokemon_edge)
     if number_of_agents > 0:
         client.add_agent('{"id":' + str(pokemon_edge[0]) + "}")
+        print(json.loads(client.get_agents())["Agents"])
         number_of_agents -= 1
 
 while number_of_agents > 0:
@@ -305,26 +308,26 @@ while client.is_running() == 'true':
     # refresh rate
     clock.tick(60)
 
-        # choose next edge
-        for pokemon in pokemons:
-            allocated_agent = agents[0]
-            path = []
-            pok_type = int(pokemon.type)
-            pokemon_edge = is_on_edge(pokemon.pos, pok_type)
-            shortest_time = m.inf
-            ash = threading.Thread()
-            for agent in agents:
-                if agent.dest == -1 and not ash.is_alive():  # if agents isn't busy
-                    agent_node_key = is_on_node(agent.pos)
-                    currents_sp = graph_algo.shortest_path(agent_node_key, pokemon_edge[0])
-                    currents_st = currents_sp[0] / agent.speed
-                    if currents_st < shortest_time:
-                        shortest_time = currents_st
-                        path = currents_sp[1] + [pokemon_edge[1]]
-                        allocated_agent = agent
-                    ash.__init__(gota_cathem_all(path, allocated_agent))
-                    ash.start()
-            # new thread
+    # choose next edge
+    for pokemon in pokemons:
+        allocated_agent = agents[0]
+        path = []
+        pok_type = int(pokemon.type)
+        pokemon_edge = is_on_edge(pokemon.pos, pok_type)
+        shortest_time = m.inf
+        ash = threading.Thread()
+        for agent in agents:
+            if agent.dest == -1 and not ash.is_alive():  # if agents isn't busy
+                agent_node_key = is_on_node(agent.pos)
+                currents_sp = graph_algo.shortest_path(agent_node_key, pokemon_edge[0])
+                currents_st = currents_sp[0] / agent.speed
+                if currents_st < shortest_time:
+                    shortest_time = currents_st
+                    path = currents_sp[1] + [pokemon_edge[1]]
+                    allocated_agent = agent
+                ash.__init__(gota_cathem_all(path, allocated_agent))
+                ash.start()
+        # new thread
 
     time_from_last_move = t.time() - last_move_time
 
