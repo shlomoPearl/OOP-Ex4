@@ -33,45 +33,19 @@ width = screen.get_width()
 height = screen.get_height()
 clock = pygame.time.Clock()
 pygame.font.init()
+FONT = pygame.font.SysFont('ComicSans', 30, bold=True)
 
 client = Client()
 client.start_connection(HOST, PORT)
 
 graph_json = client.get_graph()
 
-FONT = pygame.font.SysFont('Arial', 20, bold=True)
-# load the json string into SimpleNamespace Object
-
-# def scale(data, min_screen, max_screen, min_data, max_data):
-#     """
-#     get the scaled data with proportions min_data, max_data
-#     relative to min and max screen dimentions
-#     """
-#     return ((data - min_data) / (max_data - min_data)) * (max_screen - min_screen) + min_screen
-#
-#
-# # decorate scale with the correct values
-#
-# def my_scale(data, x=False, y=False):
-#     if x:
-#         return scale(data, 50, screen.get_width() - 50, g.min_x, g.max_x)
-#     if y:
-#         return scale(data, 50, screen.get_height() - 50, g.min_y, g.max_y)
-
-
-# print(pokemons)
-
-graph_json = client.get_graph()
-
-FONT = pygame.font.SysFont('Arial', 20, bold=True)
-# load the json string into SimpleNamespace Object
-
 graph_algo = GraphAlgo()
 graph_algo.load_from_json(client.get_graph())
 g = graph_algo.get_graph()
 
 epsilon = 0.00000001
-
+radius = 15
 
 def distance(point1, point2):
     dx_squared = m.pow((point1[0] - point2[0]), 2)  # (delta x)^2
@@ -117,13 +91,19 @@ def is_on_node(position: tuple) -> int:
 
 # scale:
 
+current_width = screen.get_width()
+current_height = screen.get_height()
+
+diff_x = g.max_x - g.min_x
+diff_y = g.max_y - g.min_y
+x_factor = (current_width - 200) / diff_x
+y_factor = (current_height - 200) / diff_y
+margin = 100
+
 
 for key in g.nodes:
     x, y = g.nodes[key].position[:-1]
     g.nodes[key].position = (x - g.min_x), (y - g.min_y), 0
-
-radius = 15
-
 
 # def text_scale(text, font):
 #     text_surface = font.render(text, True, (180, 230, 230)).convert_alpha()
@@ -161,9 +141,8 @@ def draw_arrow(start, end):
     arrow_size = 7
     pygame.draw.polygon(screen, Color('dark slate grey'), (
         (end[0] + arrow_size * m.sin(m.radians(rotation)), end[1] + arrow_size * m.cos(m.radians(rotation))),
-        (
-            end[0] + arrow_size * m.sin(m.radians(rotation - 120)),
-            end[1] + arrow_size * m.cos(m.radians(rotation - 120))),
+        (end[0] + arrow_size * m.sin(m.radians(rotation - 120)),
+         end[1] + arrow_size * m.cos(m.radians(rotation - 120))),
         (end[0] + arrow_size * m.sin(m.radians(rotation + 120)),
          end[1] + arrow_size * m.cos(m.radians(rotation + 120)))))
 
@@ -207,15 +186,6 @@ while client.is_running() == 'true':
         x, y, _ = p.pos.split(',')
         p.pos = float(x) - g.min_x, float(y) - g.min_y
 
-    current_width = screen.get_width()
-    current_height = screen.get_height()
-
-    diff_x = g.max_x - g.min_x
-    diff_y = g.max_y - g.min_y
-    x_factor = (current_width - 200) / diff_x
-    y_factor = (current_height - 200) / diff_y
-    margin = 100
-
     font_percent = int(((3.571 * current_height) // 100 + (2.314 * current_width) // 100) / 2)
     # font_percent = int(25 * current_height / 720)
 
@@ -225,7 +195,6 @@ while client.is_running() == 'true':
 
     time_to_end = format((float(client.time_to_end()) / 1000), ".1f")
     move_counter = (client.get_info().split(':')[4]).split(',')[0]
-    time_to_end = int(client.time_to_end()) / 1000
     grade = int(client.get_info().split(':')[5].split(',')[0])
     text_move_counter = font.render(f'Move Counter: {move_counter}', True, button_color)
     text_grade = font.render(f'Grade: {grade}', True, button_color)
@@ -310,7 +279,7 @@ while client.is_running() == 'true':
         x_offset, y_offset = arrow_offsets(src, dest, radius)
         pygame.draw.line(screen, Color('dark slate grey'), (src_x + x_offset, src_y + y_offset),
                          (dest_x - x_offset, dest_y - y_offset))
-        draw_arrow((src_x+x_offset, src_y+y_offset), (dest_x-x_offset, dest_y-y_offset))
+        draw_arrow((src_x + x_offset, src_y + y_offset), (dest_x - x_offset, dest_y - y_offset))
 
         # add arrow heads
 
