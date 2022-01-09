@@ -1,5 +1,8 @@
 ﻿# Project - Pokemon Game:
 **Written in: Python.**
+
+
+
 ## About:
 This project is an Implementation of an algorithm designed to make a set of agents collect as many pokemons as possible, all upon a directed weighted graph. 
 The game is executed completety via a given server, and "plays" according to the rules or our algorithm.
