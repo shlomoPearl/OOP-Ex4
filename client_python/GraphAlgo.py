@@ -3,9 +3,9 @@ import math
 import copy
 import tkinter as tk
 from typing import List
-from OOP_Ex4.client_python.GraphAlgoInterface import GraphAlgoInterface
-from OOP_Ex4.client_python.GraphInterface import GraphInterface
-from OOP_Ex4.client_python.DiGraph import DiGraph
+from client_python.GraphAlgoInterface import GraphAlgoInterface
+from client_python.GraphInterface import GraphInterface
+from client_python.DiGraph import DiGraph
 from collections import deque
 import random
 

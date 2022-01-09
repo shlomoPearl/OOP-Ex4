@@ -1,7 +1,7 @@
 import math
 
-from OOP_Ex4.client_python.GraphInterface import GraphInterface
-from OOP_Ex4.client_python.Node import Node
+from client_python.GraphInterface import GraphInterface
+from client_python.Node import Node
 import random
 
 

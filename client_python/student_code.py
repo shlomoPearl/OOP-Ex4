@@ -6,6 +6,7 @@ Very simple GUI example for python client to communicates with the server and "p
 import math
 import time as t
 from types import SimpleNamespace
+
 from client import Client
 import json
 from pygame import gfxdraw
@@ -72,8 +73,10 @@ def my_scale(data, x=False, y=False):
 
 
 radius = 15
-
-client.add_agent("{\"id\":0}")
+num_of_agent = int(client.get_info().split(':')[10].split('}')[0])
+print(num_of_agent)
+for i in range(num_of_agent):
+    client.add_agent(f'{{\"id\":{i}}}')
 # client.add_agent("{\"id\":1}")
 # client.add_agent("{\"id\":2}")
 # client.add_agent("{\"id\":3}")
@@ -112,7 +115,11 @@ while client.is_running() == 'true':
     move_counter = (client.get_info().split(':')[4]).split(',')[0]
     time_to_end = int(client.time_to_end()) / 1000
     text_move_counter = font.render(f'Move Counter: {move_counter}', True, button_color)
-    text_time_to_end = font.render(f'Time to End: {time_to_end}', True, button_color)
+    if time_to_end>10:
+        text_time_to_end = font.render(f'Time to End: {time_to_end}', True, button_color)
+    else:
+        text_time_to_end = font.render(f'Time to End: {time_to_end}', True, 'red')
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -175,11 +182,14 @@ while client.is_running() == 'true':
 
     # draw agents
     for agent in agents:
-        pygame.draw.circle(screen, Color(122, 61, 23),
-                           (int(agent.pos.x), int(agent.pos.y)), 10)
+        pygame.draw.circle(screen, Color(122, 61, 23),(int(agent.pos.x), int(agent.pos.y)), 10)
+        image = pygame.image.load(r'..\ash_new.jpg')
+        screen.blit(image, (int(agent.pos.x)-20, int(agent.pos.y)-35))
     # draw pokemons (note: should differ (GUI wise) between the up and the down pokemons (currently they are marked in the same way).
     for p in pokemons:
         pygame.draw.circle(screen, Color(0, 255, 255), (int(p.pos.x), int(p.pos.y)), 10)
+        image = pygame.image.load(r'..\pikachu_new.jpg')
+        screen.blit(image,(int(p.pos.x)-20, int(p.pos.y)-20))
 
     # update screen changes
     display.update()
