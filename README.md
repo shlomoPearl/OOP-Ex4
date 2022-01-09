@@ -9,7 +9,7 @@ Each pokemon, also has a value to it, which is translated into the speed of the 
 ### Running the program from your command line:  
   
 download all files from this repository to the same file on your pc. Then, type the following command on your terminal:
-java -jar Ex4_Server_v0.0.jar <case number>
+java -jar Ex4_Server_v0.0.jar \<case number\>
 
 After running said command, run the student_code.py program, and enjoy!
 
