@@ -68,7 +68,7 @@ FONT = pygame.font.SysFont('Arial', 20, bold=True)
 
 graph_json = client.get_graph()
 
-FONT = pygame.font.SysFont('Arial', 20, bold=True)
+FONT = pygame.font.SysFont('ComicSans', 25, bold=True)
 # load the json string into SimpleNamespace Object
 
 graph_algo = GraphAlgo()
@@ -210,18 +210,17 @@ while client.is_running() == 'true':
 
     # check events
     button_color = (180, 230, 230)
-    font = pygame.font.SysFont('ComicSans', 25, bold=True)
-    text_stop = font.render('Stop', True, button_color)
+    text_stop = FONT.render('Stop', True, button_color)
     time_to_end = format((float(client.time_to_end()) / 1000), ".1f")
     move_counter = (client.get_info().split(':')[4]).split(',')[0]
     time_to_end = int(client.time_to_end()) / 1000
     grade = int(client.get_info().split(':')[5].split(',')[0])
-    text_move_counter = font.render(f'Move Counter: {move_counter}', True, button_color)
-    text_grade = font.render(f'Grade: {grade}', True, button_color)
+    text_move_counter = FONT.render(f'Move Counter: {move_counter}', True, button_color)
+    text_grade = FONT.render(f'Grade: {grade}', True, button_color)
     if time_to_end > 10:
-        text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, button_color)
+        text_time_to_end = FONT.render(f'Time to End: {time_to_end} sec', True, button_color)
     else:
-        text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, 'red')
+        text_time_to_end = FONT.render(f'Time to End: {time_to_end} sec', True, 'red')
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
