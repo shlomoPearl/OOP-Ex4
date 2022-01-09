@@ -1,3 +1,5 @@
+from typing import Any
+
 import math
 import math as m
 import random
@@ -10,8 +12,7 @@ import json
 from pygame import gfxdraw
 import pygame
 from pygame import *
-
-# init pygame
+from _thread import start_new_thread
 from DiGraph import DiGraph
 from GraphAlgo import GraphAlgo
 
@@ -44,15 +45,54 @@ g = graph_algo.get_graph()
 epsilon = 0.00000001
 radius = 15
 
-# scale factors:
-current_width = screen.get_width()
-current_height = screen.get_height()
-
-diff_x = g.max_x - g.min_x
-diff_y = g.max_y - g.min_y
-x_factor = (current_width - 200) / diff_x
-y_factor = (current_height - 200) / diff_y
+x_factor = 1
+y_factor = 1
 margin = 100
+
+y_percent = (5.7 * height) // 100
+stop_x_percent = (6.3 * width) // 100
+move_x_percent = (29 * width) // 100
+time_x_percent = (58 * width) // 100
+grade_x_percent = (72 * width) // 100
+offset_percent = (0.37 * width) // 100 + 1
+font_percent = int(((3.571 * height) // 100 + (2.314 * width) // 100) / 2)
+
+# scale factors:
+def update_scale():
+    global width
+    width = screen.get_width()
+
+    global height
+    height = screen.get_height()
+
+    diff_x = g.max_x - g.min_x
+    diff_y = g.max_y - g.min_y
+
+    global x_factor
+    x_factor = (width - 200) / diff_x
+
+    global y_factor
+    y_factor = (height - 200) / diff_y
+
+    global margin
+    margin = 100
+
+    global y_percent
+    y_percent = (5.7 * height) // 100
+    global stop_x_percent
+    stop_x_percent = (6.3 * width) // 100
+    global move_x_percent
+    move_x_percent = (29 * width) // 100
+    global time_x_percent
+    time_x_percent = (58 * width) // 100
+    global grade_x_percent
+    grade_x_percent = (72 * width) // 100
+    global offset_percent
+    offset_percent = (0.37 * width) // 100 + 1
+    global font_percent
+    font_percent = int(((3.571 * height) // 100 + (2.314 * width) // 100) / 2)
+
+update_scale()
 
 for key in g.nodes:
     x, y = g.nodes[key].position[:-1]
@@ -101,13 +141,44 @@ def is_on_node(position: tuple) -> int:
             return node_key
 
 
-# def text_scale(text, font):
-#     text_surface = font.render(text, True, (180, 230, 230)).convert_alpha()
-#     cur_w, cur_h = screen.get_size()
-#     txt_w, txt_h = text_surface.get_size()
-#     text_surface = pygame.transform.smoothscale(text_surface, (txt_w * cur_w // width, txt_h * cur_h // height))
-#
-#     return text_surface, text_surface.get_rect()
+def draw_buttons():
+
+    button_color = (180, 230, 230)
+    font = pygame.font.SysFont('ComicSans', font_percent, bold=True, )
+    text_stop = font.render('Stop', True, button_color)
+
+    time_to_end = format((float(client.time_to_end()) / 1000), ".1f")
+    move_counter = (client.get_info().split(':')[4]).split(',')[0]
+    grade = int(client.get_info().split(':')[5].split(',')[0])
+    text_move_counter = font.render(f'Move Counter: {move_counter}', True, button_color)
+    text_grade = font.render(f'Grade: {grade}', True, button_color)
+    if float(time_to_end) > 10:
+        text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, button_color)
+    else:
+        text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, 'red')
+
+    # draw button for number of moves
+    pygame.draw.rect(screen, (100, 100, 100),
+                     [stop_x_percent + 2 * offset_percent, offset_percent,
+                      move_x_percent - (stop_x_percent + offset_percent),
+                      y_percent])
+    # draw button for time to end
+    pygame.draw.rect(screen, (100, 100, 100),
+                     [move_x_percent + 2 * offset_percent, offset_percent, time_x_percent - move_x_percent,
+                      y_percent])
+    # draw button for grade
+    pygame.draw.rect(screen, (100, 100, 100),
+                     [time_x_percent + 3 * offset_percent, offset_percent,
+                      grade_x_percent - (time_x_percent - offset_percent),
+                      y_percent])
+
+    # superimposing the text onto our button
+    text_y_percent = (0.3 * width) // 100 + 1
+
+    screen.blit(text_stop, (text_y_percent + 2 * offset_percent, text_y_percent))
+    screen.blit(text_move_counter, (stop_x_percent + text_y_percent + 3 * offset_percent, text_y_percent))
+    screen.blit(text_time_to_end, (move_x_percent + text_y_percent + 3 * offset_percent, text_y_percent))
+    screen.blit(text_grade, (time_x_percent + text_y_percent + offset_percent * 4, text_y_percent))
 
 
 def arrow_offsets(source, dest, r):
@@ -134,6 +205,7 @@ def draw_arrow(start, end):
         (end[0] + arrow_size * m.sin(m.radians(rotation + 120)),
          end[1] + arrow_size * m.cos(m.radians(rotation + 120)))))
 
+
 def draw_edges():
     # draw edges
     for edge in g.edges:
@@ -153,6 +225,7 @@ def draw_edges():
                          (dest_x - x_offset, dest_y - y_offset))
         draw_arrow((src_x + x_offset, src_y + y_offset), (dest_x - x_offset, dest_y - y_offset))
 
+
 def draw_nodes():
     # draw nodes
     for node in g.nodes.values():
@@ -168,6 +241,7 @@ def draw_nodes():
         rect = id_srf.get_rect(center=(x, y))
         screen.blit(id_srf, rect)
 
+
 def draw_pokemons():
     for p in pokemons:
         x = p.pos[0] * x_factor + margin
@@ -176,6 +250,7 @@ def draw_pokemons():
         pygame.draw.circle(screen, Color(0, 255, 255), (x, y), 10)
         image = pygame.image.load(r'..\pikachu_new.jpg')
         screen.blit(image, (x - 20, y - 20))
+
 
 def draw_agents():
     for agent in agents:
@@ -193,13 +268,17 @@ number_of_agents = int(info["agents"])
 pokemons = json.loads(client.get_pokemons(), object_hook=lambda d: SimpleNamespace(**d)).Pokemons
 pokemons = sorted([p.Pokemon for p in pokemons], key=lambda p: int(p.value), reverse=True)
 
+threads = []
+
 for p in pokemons:
     x, y, _ = p.pos.split(',')
     p.pos = float(x) - g.min_x, float(y) - g.min_y
     pokemon_edge = is_on_edge(p.pos, p.type)
-    # print(pokemon_edge)
+    print(pokemon_edge)
     for i in range(number_of_agents):
         client.add_agent('{"id":' + str(pokemon_edge[0]) + "}")
+        thr = threading.Thread()
+        threads.append(thr)
 
 
 def gota_cathem_all(node_list, agent):
@@ -209,35 +288,34 @@ def gota_cathem_all(node_list, agent):
                 client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(node) + '}')
     return
 
+
 def choose_next_node_algo():
-# choose next edge
+    # choose next edge
     for pokemon in pokemons:
         allocated_agent = agents[0]
         path = []
         pok_type = int(pokemon.type)
         pokemon_edge = is_on_edge(pokemon.pos, pok_type)
         shortest_time = m.inf
-        ash = threading.Thread()
         for agent in agents:
-            if agent.dest == -1 and not ash.is_alive():  # if agents isn't busy
+            if agent.dest == -1 and not threads[agent.id].is_alive():  # if agents isn't busy
                 agent_node_key = is_on_node(agent.pos)
                 currents_sp = graph_algo.shortest_path(agent_node_key, pokemon_edge[0])
                 currents_st = currents_sp[0] / agent.speed
                 if currents_st < shortest_time:
                     shortest_time = currents_st
                     path = currents_sp[1] + [pokemon_edge[1]]
-                    # print(path)
                     allocated_agent = agent
-                ash.__init__(gota_cathem_all(path, allocated_agent))
-                ash.start()
-        # new thread
+                threads[agent.id].__init__(gota_cathem_all(path, allocated_agent))
+                threads[agent.id].start()
 
-# this commnad starts the server - the game is running now
+
 client.start()
 
-last_move_time = t.time()
-
+# main loop
 while client.is_running() == 'true':
+
+    update_scale()
 
     agents = json.loads(client.get_agents(), object_hook=lambda d: SimpleNamespace(**d)).Agents
     agents = [agent.Agent for agent in agents]
@@ -250,30 +328,6 @@ while client.is_running() == 'true':
     for p in pokemons:
         x, y, _ = p.pos.split(',')
         p.pos = float(x) - g.min_x, float(y) - g.min_y
-
-    font_percent = int(((3.571 * current_height) // 100 + (2.314 * current_width) // 100) / 2)
-    # font_percent = int(25 * current_height / 720)
-
-    button_color = (180, 230, 230)
-    font = pygame.font.SysFont('ComicSans', font_percent, bold=True, )
-    text_stop = font.render('Stop', True, button_color)
-
-    time_to_end = format((float(client.time_to_end()) / 1000), ".1f")
-    move_counter = (client.get_info().split(':')[4]).split(',')[0]
-    grade = int(client.get_info().split(':')[5].split(',')[0])
-    text_move_counter = font.render(f'Move Counter: {move_counter}', True, button_color)
-    text_grade = font.render(f'Grade: {grade}', True, button_color)
-    if float(time_to_end) > 10:
-        text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, button_color)
-    else:
-        text_time_to_end = font.render(f'Time to End: {time_to_end} sec', True, 'red')
-
-    y_percent = (5.7 * current_height) // 100
-    stop_x_percent = (6.3 * current_width) // 100
-    move_x_percent = (29 * current_width) // 100
-    time_x_percent = (58 * current_width) // 100
-    grade_x_percent = (72 * current_width) // 100
-    offset_percent = (0.37 * current_width) // 100 + 1
 
     # refresh surface
     screen.fill('light grey')
@@ -293,26 +347,8 @@ while client.is_running() == 'true':
         pygame.draw.rect(screen, (170, 170, 170), [offset_percent, offset_percent, stop_x_percent, y_percent])
     else:
         pygame.draw.rect(screen, (100, 100, 100), [offset_percent, offset_percent, stop_x_percent, y_percent])
-    # draw button for number of moves
-    pygame.draw.rect(screen, (100, 100, 100),
-                     [stop_x_percent + 2 * offset_percent, offset_percent, move_x_percent - (stop_x_percent + offset_percent),
-                      y_percent])
-    # draw button for time to end
-    pygame.draw.rect(screen, (100, 100, 100),
-                     [move_x_percent + 2 * offset_percent, offset_percent, time_x_percent - move_x_percent,
-                      y_percent])
-    # draw button for grade
-    pygame.draw.rect(screen, (100, 100, 100),
-                     [time_x_percent + 3 * offset_percent, offset_percent, grade_x_percent - (time_x_percent - offset_percent),
-                      y_percent])
 
-    # superimposing the text onto our button
-    text_y_percent = (0.3 * current_width) // 100 + 1
-
-    screen.blit(text_stop, (text_y_percent + 2 * offset_percent, text_y_percent))
-    screen.blit(text_move_counter, (stop_x_percent + text_y_percent + 3 * offset_percent, text_y_percent))
-    screen.blit(text_time_to_end, (move_x_percent + text_y_percent + 3 * offset_percent, text_y_percent))
-    screen.blit(text_grade, (time_x_percent + text_y_percent + offset_percent * 4, text_y_percent))
+    draw_buttons()
 
     draw_edges()
     draw_nodes()
@@ -327,11 +363,6 @@ while client.is_running() == 'true':
 
     choose_next_node_algo()
 
-    # clock moves in-order to stay under 10 moves a second
-    time_from_last_move = t.time() - last_move_time
+    t.sleep(0.09) # keeps move count to around 10 per sec
+    client.move()
 
-    if time_from_last_move >= 0.095:
-        client.move()
-        last_move_time = t.time()
-
-# game over:
