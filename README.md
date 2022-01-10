@@ -1,7 +1,7 @@
 ﻿# Project - Pokemon Game:
 **Written in: Python.**
 
-https://user-images.githubusercontent.com/73857923/148706710-1bf40db2-d58b-4046-867e-6cd204686167.mp4
+![ezgif-7-57c3288154](https://user-images.githubusercontent.com/73857923/148706824-bd4dc4f2-7270-44ef-824f-f3ac0c0a82c8.gif)
 
 ## About:
 This project is an Implementation of an algorithm designed to make a set of agents collect as many pokemons as possible, all upon a directed weighted graph. 
